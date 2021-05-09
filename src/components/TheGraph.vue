@@ -11,23 +11,24 @@
 </template>
 
 <script>
-import spGraph from "../graph/SPGraph";
+import SPStage from "../graph/SPStage";
 
 export default {
   mounted() {
-    spGraph.init({
+    this.spStage = new SPStage({
       container: "container",
       width: 800,
       height: 600,
       // draggable: true
     });
+    window.spStage = this.spStage;
   },
   methods: {
     addNode() {
-      spGraph.addNode();
+      this.spStage.spAddNode();
     },
     removeNode() {
-      spGraph.deleteSelNode();
+      this.spStage.spRemoveSelNode();
     }
   },
 };

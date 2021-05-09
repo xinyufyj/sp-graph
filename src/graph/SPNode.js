@@ -1,125 +1,150 @@
 import Konva from 'konva';
 
-class SPNode {
+import SPPort from "./SPPort";
+import * as event from "./event";
+
+const nodeW = 80;
+const nodeH = 80;
+
+class SPNode extends Konva.Group {
   constructor() {
-    this.seleted = false;
-
-    let offsetX = 0, offsetY = 0;
-    let width = 80, height = 80;
-    let radius = 5;
-
-    this.group = new Konva.Group({
+    super({
       x: 20,
       y: 20,
-      draggable: true
-    });
-
-    let box =  new Konva.Rect({
-      x: 0,
-      y: 0,
-      width: width,
-      height: height,
-      cornerRadius: 5,
-      stroke: 'black',
-      strokeWidth: 2,
-      name: 'node',
-      // draggable: true
-      // hitFunc: function (context) {
-      //   context.beginPath();
-      //   context.moveTo(offsetX, offsetX);
-      //   context.lineTo(offsetX + width, offsetY);
-      //   context.lineTo(offsetX + width , offsetY + height * 0.5 - radius);
-      //   context.arc(offsetX + width, offsetY + height * 0.5, radius, Math.PI * 1.5, Math.PI * 0.5, true);
-      //   context.lineTo(offsetX + width, offsetY + height);
-      //   context.lineTo(offsetX, offsetY + height);
-      //   context.lineTo(offsetX, offsetY + height * 0.5 + radius);
-      //   context.arc(offsetX, offsetY + height * 0.5, radius, Math.PI * 0.5, Math.PI * 1.5, true);
-      //   context.lineTo(offsetX, offsetY);
-      //   context.fillStrokeShape(this);
-      // },
+      draggable: true,
+      name: 'sp-node',
     });
     
-    let text = new Konva.Text({
+    // if selected
+    this.isSelected = false;
+    // input ports
+    this.inputPortNum = 3;
+    this.inputPorts = [];
+    this.outputPortNum = 4;
+    this.outputPorts = [];
+
+    // involved lines
+    this.lines = [];
+
+    // 绘制node基本形状
+    this.spBasicShape();
+    // 绘制端口的形状
+    this.spPortShape();
+
+    this.on('click', evt => {
+      evt.cancelBubble = true;
+      this.getStage().fire(event.NODE_SELECT, {
+        target: this
+      });
+    });
+
+    this.on('dragstart', evt => {
+      let tName = evt.target.name();
+      if(tName === 'sp-input' || tName === 'sp-output') {
+        evt.target.stopDrag();
+        if(tName === 'sp-output') {
+          this.getStage().fire(event.DRAW_LINE_START, {
+            targetNode: this,
+            targetPort: evt.target
+          });
+        }
+      }
+    });
+  }
+  // 绘制node基本形状
+  spBasicShape() {
+    this.spBox = new Konva.Rect({
+      x: 0,
+      y: 0,
+      width: nodeW,
+      height: nodeH,
+      cornerRadius: 5,
+      fill: '#fff',
+      stroke: '#000',
+      strokeWidth: 2,
+    });
+
+    this.spText = new Konva.Text({
       text: 'node',
       fontSize: 18,
       fontFamily: 'Calibri',
       fill: '#555',
-      width: box.width(),
+      width: nodeW,
       padding: 10,
       align: 'center',
       listening: false,
     });
-
-    let inputPort = new Konva.Circle({
-      x: 0,
-      y: box.height() / 2,
-      radius: radius,
-      fill:'#fff',
-      stroke: 'black',
-      strokeWidth: 1,
-      name: 'input',
-    }); 
-
-    let outputPort = new Konva.Circle({
-      x: box.width(),
-      y: box.height() / 2,
-      radius: radius,
-      fill:'#fff',
-      stroke: 'black',
-      strokeWidth: 1,
-      name: 'output',
-      draggable: true
-    });  
-
-    this.group.add(box);
-    this.group.add(text);
-    this.group.add(inputPort);
-    this.group.add(outputPort);
-
-    this.box = box;
-
-    box._sp = this;
-
-    // inputPort.on('mousedown', evt => {
-    //   evt.cancelBubble = true;
-    // })
-    
-    outputPort.on('dragstart', () => {
-      outputPort.fill('red')
-      let stage =  this.group.getStage();
-      stage.fire('portdrag', {target: outputPort})
-      outputPort.stopDrag();
-    })
-
-    // box.on('dragstart', () => {
-    //   // stop box dragging
-    //   box.stopDrag();
-      
-    //   // move group to the center
-    //   // const size = this.group.getClientRect();
-    //   // const pos = this.group.getStage().getPointerPosition();
-      
-    //   // this.group.setAttrs({
-    //   //    x: pos.x - size.width / 2,
-    //   //    y: pos.y - size.height / 2,
-    //   // });
-    //   this.group.startDrag();
-    // });
-    
+    this.add(this.spBox);
+    this.add(this.spText);
   }
-  highlight(isSelected) {
-    this.seleted = isSelected;
-    this.box.strokeWidth(this.seleted ? 4 : 2);
-    this.group.getLayer().draw();
+  // 绘制端口的形状
+  spPortShape() {
+    const InputStep = nodeH / (this.inputPortNum + 1);
+    for(let i = 0; i < this.inputPortNum; i++) {
+      let node = new SPPort({
+        x: 0,
+        y: InputStep * (i + 1),
+        name: 'sp-input'
+      })
+      this.inputPorts.push(node);
+      this.add(node);
+    }
+
+    const OnputStep = nodeH / (this.outputPortNum + 1);
+    for(let i = 0; i < this.outputPortNum; i++) {
+      let node = new SPPort({
+        x: nodeW,
+        y: OnputStep * (i + 1),
+        name: 'sp-output'
+      });
+      this.outputPorts.push(node);
+      this.add(node);
+    }
   }
-  remove() {
-    this.box._sp = null;
-    this.box = null;
-    let Layer = this.group.getLayer();
-    this.group.destroy();
-    Layer.draw();
-    this.group = null;
+  spSelect(isSelected) {
+    this.isSelected = isSelected;
+    if(this.isSelected) {
+      this.spBox.strokeWidth(4);
+    }else {
+      this.spBox.strokeWidth(2);
+    }
+    this.spSelectLines(isSelected);
+  }
+  spSelectLines(isSelected) {
+    for(let i = 0; i < this.lines.length; i++) {
+      this.lines[i].spSelect(isSelected);
+    }
+  }
+  spAddLine(line) {
+    this.lines.push(line);
+  }
+  spCheckLineExist(startPort, endPort) {
+    for(let i = 0; i < this.lines.length; i++) {
+      if(this.lines[i].spIsEqual(startPort, endPort)) {
+        return true;
+      }
+    }
+    return false;
+  }
+  spUpdateLines() {
+    for(let i = 0; i < this.lines.length; i++) {
+      this.lines[i].spUpdate();
+    }
+  }
+  spRemoveLine(line) {
+    let idx = this.lines.indexOf(line);
+    if(idx > -1) {
+      this.lines.splice(idx, 1);
+    }
+  }
+  spDestroy() {
+    let lines = this.lines.slice(0);
+    for(let i = 0; i < lines.length; i++) {
+      lines[i].spDestroy();
+    }
+    this.lines = [];
+    this.destroy();
   }
 }
 
-export default SPNode
+export default SPNode;
