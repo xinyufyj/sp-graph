@@ -7,12 +7,13 @@ const nodeW = 80;
 const nodeH = 80;
 
 class SPNode extends Konva.Group {
-  constructor() {
+  constructor(config={}) {
     super({
-      x: 20,
-      y: 20,
+      x: 0,
+      y: 0,
       draggable: true,
       name: 'sp-node',
+      ...config
     });
     
     // if selected
@@ -72,7 +73,6 @@ class SPNode extends Konva.Group {
       width: nodeW,
       padding: 10,
       align: 'center',
-      listening: false,
     });
     this.add(this.spBox);
     this.add(this.spText);

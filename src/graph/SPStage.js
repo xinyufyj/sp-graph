@@ -19,22 +19,30 @@ class SPStage extends Konva.Stage {
     this.add(this.nodeLayer);
     this.nodeLayer.add(this.dynamicLine);
 
-    // 点击选中节点或线
+    // 1.点击选中节点或线
     // 当前选中的节点
     this.selNode = null;
     // 当前选中的线
     this.selLine = null;
     this.spSelectNodeorLineFunc();
 
-    // 画线
+    // 2.画线
     this.isDrawingLine = false;
     this.drawingStartPort = null;
     this.drawingEndPort = null;
     this.drawingEndPrePort = null;
     this.spDrawDynamicLine();
 
-    // 拖动node, 更新 staticLine
+    // 3.拖动node, 更新 staticLine
     this.spUpdateStaticLines();
+
+    // 4.监听鼠标滚轮
+    this.spListenWheel();
+
+    // 5.拖动画布
+    this.isDragStart = false;
+    this.spDragStartPos = {x:0, y:0};
+    this.spDragCanvas();
   }
   // 重绘
   spRedraw() {
@@ -42,7 +50,10 @@ class SPStage extends Konva.Stage {
   }
   // 增加节点
   spAddNode() {
-    this.nodeLayer.add(new SPNode());
+    this.nodeLayer.add(new SPNode({
+      x: -this.nodeLayer.x(),
+      y: -this.nodeLayer.y()
+    }));
     this.spRedraw();
   }
   // 删除选中节点
@@ -115,6 +126,8 @@ class SPStage extends Konva.Stage {
         return;
       }
       let pos = this.getPointerPosition();
+      pos.x = pos.x - this.nodeLayer.x();
+      pos.y = pos.y - this.nodeLayer.y();
       this.dynamicLine.spUpdateEndPosition(pos);
       if(this.drawingEndPrePort) {
         this.drawingEndPrePort.spHighlight(false);
@@ -171,6 +184,52 @@ class SPStage extends Konva.Stage {
         evt.target.spUpdateLines();
         this.spRedraw();
       }
+    });
+  }
+  spTranslateX(x) {
+    let curScale = this.scaleX();
+    this.nodeLayer.x(x/curScale);
+    this.draw();
+  }
+  spTranslateY(y) {
+    let curScale = this.scaleX();
+    this.nodeLayer.y(y/curScale);
+    this.draw();
+  }
+  spListenWheel() {
+    this.on('wheel', e => {
+      let curScale = this.scaleX();
+      if(e.evt.deltaY < 0) {
+        curScale += 0.2;
+      }else {
+        curScale -= 0.2;
+      }
+      curScale = Math.max(0.2, Math.min(5, curScale));
+      this.scale({x: curScale, y: curScale});
+      this.draw();
+    })
+  }
+  spDragCanvas() {
+    this.on("mousedown", evt => {
+      if(evt.target.name() !== 'sp-stage') {
+        this.isDragStart = false;
+        return;
+      }
+      this.isDragStart = true;
+      this.spDragStartPos = this.getPointerPosition();
+    });
+    this.on("mousemove", () => {
+      if(!this.isDragStart) {
+        return;
+      }
+      let pos = this.getPointerPosition();
+      this.nodeLayer.x(this.nodeLayer.x() +  pos.x - this.spDragStartPos.x);
+      this.nodeLayer.y(this.nodeLayer.y() +  pos.y - this.spDragStartPos.y);
+      this.spDragStartPos = pos;
+      this.spRedraw();
+    });
+    this.on("mouseup", evt => {
+      this.isDragStart = false;
     });
   }
 }

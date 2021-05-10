@@ -14,12 +14,19 @@
 import SPStage from "../graph/SPStage";
 
 export default {
+  data() {
+    return {
+      scale: 1.0,
+      x: 0,
+      y: 0
+    }
+  },
   mounted() {
     this.spStage = new SPStage({
       container: "container",
       width: 800,
       height: 600,
-      // draggable: true
+      name: 'sp-stage'
     });
     window.spStage = this.spStage;
   },
