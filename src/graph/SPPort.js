@@ -31,14 +31,6 @@ class SPPort extends Konva.Circle {
   getSpnode() {
     return this.getParent();
   }
-  getAbsolutePosition() {
-    let pos = super.getAbsolutePosition();
-    let layer = this.getLayer();
-    return {
-      x: pos.x - layer.x(),
-      y: pos.y - layer.y()
-    }
-  }
 }
 
 export default SPPort;

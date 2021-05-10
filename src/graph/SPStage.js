@@ -50,10 +50,7 @@ class SPStage extends Konva.Stage {
   }
   // 增加节点
   spAddNode() {
-    this.nodeLayer.add(new SPNode({
-      x: -this.nodeLayer.x(),
-      y: -this.nodeLayer.y()
-    }));
+    this.nodeLayer.add(new SPNode());
     this.spRedraw();
   }
   // 删除选中节点
@@ -126,8 +123,6 @@ class SPStage extends Konva.Stage {
         return;
       }
       let pos = this.getPointerPosition();
-      pos.x = pos.x - this.nodeLayer.x();
-      pos.y = pos.y - this.nodeLayer.y();
       this.dynamicLine.spUpdateEndPosition(pos);
       if(this.drawingEndPrePort) {
         this.drawingEndPrePort.spHighlight(false);
@@ -167,15 +162,16 @@ class SPStage extends Konva.Stage {
   // 画静态线
   spAddStaticLine(startPort, endPort) {
     let staticLine = new SPStaticLine({
+      name: 'sp-static-line',
       startPort,
       endPort,
     })
+    this.nodeLayer.add(staticLine);
+    staticLine.moveToBottom();
     staticLine.spUpdate();
     // 将 port 节点保存至 spnode
     startPort.getSpnode().spAddLine(staticLine);
     endPort.getSpnode().spAddLine(staticLine);
-    this.nodeLayer.add(staticLine);
-    staticLine.moveToBottom();
   }
   // 当拖动 spnode 时，更新staticline
   spUpdateStaticLines() {
@@ -223,8 +219,15 @@ class SPStage extends Konva.Stage {
         return;
       }
       let pos = this.getPointerPosition();
-      this.nodeLayer.x(this.nodeLayer.x() +  pos.x - this.spDragStartPos.x);
-      this.nodeLayer.y(this.nodeLayer.y() +  pos.y - this.spDragStartPos.y);
+      // this.nodeLayer.x(this.nodeLayer.x() +  pos.x - this.spDragStartPos.x);
+      // this.nodeLayer.y(this.nodeLayer.y() +  pos.y - this.spDragStartPos.y);
+      for(let i = 0; i < this.nodeLayer.children.length; i++) {
+        let node = this.nodeLayer.children[i];
+        if(node.name() !== 'sp-node') continue;
+        node.x(node.x() + pos.x - this.spDragStartPos.x);
+        node.y(node.y() + pos.y - this.spDragStartPos.y);
+        node.spUpdateLines();
+      }
       this.spDragStartPos = pos;
       this.spRedraw();
     });

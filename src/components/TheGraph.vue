@@ -16,9 +16,6 @@ import SPStage from "../graph/SPStage";
 export default {
   data() {
     return {
-      scale: 1.0,
-      x: 0,
-      y: 0
     }
   },
   mounted() {
@@ -36,6 +33,14 @@ export default {
     },
     removeNode() {
       this.spStage.spRemoveSelNode();
+    },
+    translateX() {
+      this.spStage.nodeLayer.x( this.spStage.nodeLayer.x() + 20)
+      this.spStage.draw()
+    },
+    translateY() {
+      this.spStage.nodeLayer.y( this.spStage.nodeLayer.y() + 20)
+      this.spStage.draw()
     }
   },
 };

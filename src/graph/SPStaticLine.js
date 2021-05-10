@@ -7,8 +7,17 @@ class SPStaticLine extends SPDynamicLine {
     this.endPort = config.endPort;
   }
   spUpdate() {
-    this.startPos = this.startPort.getAbsolutePosition();
-    this.endPos = this.endPort.getAbsolutePosition();
+    let scale = this.getStage().scaleX();
+    let startPos = this.startPort.getAbsolutePosition();
+    this.startPos = {
+      x: startPos.x / scale,
+      y: startPos.y / scale
+    }
+    let endPos = this.endPort.getAbsolutePosition();
+    this.endPos = {
+      x: endPos.x / scale,
+      y: endPos.y / scale
+    }
     super.spUpdate();
   }
   spIsEqual(sNode, eNode) {

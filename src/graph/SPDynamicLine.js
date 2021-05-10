@@ -7,11 +7,21 @@ class SPDynamicLine extends SPLine {
     this.endPos = this.startPos;
   }
   spStartPort(port) {
-    this.startPos = port.getAbsolutePosition();
+    let pos = port.getAbsolutePosition();
+    let scale = this.getStage().scaleX();
+    this.startPos = {
+      x: pos.x / scale,
+      y: pos.y / scale
+    }
     this.endPos = this.startPos;
     this.spUpdate();
   }
   spUpdateEndPosition(pos) {
+    let scale = this.getStage().scaleX();
+    pos = {
+      x: pos.x / scale,
+      y: pos.y / scale
+    }
     this.endPos = pos;
     this.spUpdate();
   }
