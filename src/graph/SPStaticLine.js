@@ -1,4 +1,5 @@
 import SPDynamicLine from './SPDynamicLine'
+import * as utils from './utils'
 
 class SPStaticLine extends SPDynamicLine {
   constructor(config={}) {
@@ -7,17 +8,8 @@ class SPStaticLine extends SPDynamicLine {
     this.endPort = config.endPort;
   }
   spUpdate() {
-    let scale = this.getStage().scaleX();
-    let startPos = this.startPort.getAbsolutePosition();
-    this.startPos = {
-      x: startPos.x / scale,
-      y: startPos.y / scale
-    }
-    let endPos = this.endPort.getAbsolutePosition();
-    this.endPos = {
-      x: endPos.x / scale,
-      y: endPos.y / scale
-    }
+    this.startPos = utils.getRelativePosition(this.getLayer(), this.startPort.getAbsolutePosition());
+    this.endPos = utils.getRelativePosition(this.getLayer(), this.endPort.getAbsolutePosition());
     super.spUpdate();
   }
   spIsEqual(sNode, eNode) {

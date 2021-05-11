@@ -1,4 +1,5 @@
 import SPLine from './SPLine'
+import * as utils from './utils'
 
 class SPDynamicLine extends SPLine {
   constructor(config={}) {
@@ -8,21 +9,12 @@ class SPDynamicLine extends SPLine {
   }
   spStartPort(port) {
     let pos = port.getAbsolutePosition();
-    let scale = this.getStage().scaleX();
-    this.startPos = {
-      x: pos.x / scale,
-      y: pos.y / scale
-    }
+    this.startPos = utils.getRelativePosition(this.getLayer(), pos);
     this.endPos = this.startPos;
     this.spUpdate();
   }
   spUpdateEndPosition(pos) {
-    let scale = this.getStage().scaleX();
-    pos = {
-      x: pos.x / scale,
-      y: pos.y / scale
-    }
-    this.endPos = pos;
+    this.endPos = utils.getRelativePosition(this.getLayer(), pos);
     this.spUpdate();
   }
   spUpdate() {

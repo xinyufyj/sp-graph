@@ -5,6 +5,7 @@ import SPStaticLine from "./SPStaticLine";
 import SPDynamicLine from "./SPDynamicLine";
 import SPNode from "./SPNode";
 import * as event from "./event";
+import * as utils from './utils';
 
 class SPStage extends Konva.Stage {
   constructor(config) {
@@ -50,7 +51,10 @@ class SPStage extends Konva.Stage {
   }
   // 增加节点
   spAddNode() {
-    this.nodeLayer.add(new SPNode());
+    let pos = utils.getRelativePosition(this.nodeLayer, {x: 20, y: 20});
+    this.nodeLayer.add(new SPNode({
+      ...pos
+    }));
     this.spRedraw();
   }
   // 删除选中节点
@@ -138,7 +142,7 @@ class SPStage extends Konva.Stage {
         this.drawingEndPrePort = curPort;
         this.drawingEndPort.spHighlight(true);
       }
-      this.spRedraw();
+      this.nodeLayer.batchDraw();
     });
     this.on('mouseup', () => {
       if(!this.isDrawingLine) {
@@ -178,7 +182,7 @@ class SPStage extends Konva.Stage {
     this.on('dragmove', evt => {
       if(evt.target.name() === 'sp-node') {
         evt.target.spUpdateLines();
-        this.spRedraw();
+        this.nodeLayer.batchDraw();
       }
     });
   }
@@ -194,15 +198,29 @@ class SPStage extends Konva.Stage {
   }
   spListenWheel() {
     this.on('wheel', e => {
-      let curScale = this.scaleX();
-      if(e.evt.deltaY < 0) {
-        curScale += 0.2;
-      }else {
-        curScale -= 0.2;
-      }
-      curScale = Math.max(0.2, Math.min(5, curScale));
-      this.scale({x: curScale, y: curScale});
-      this.draw();
+      e.evt.preventDefault();
+      let oldScale = this.scaleX();
+
+      let pointer = this.getPointerPosition();
+
+      let mousePointTo = {
+        x: (pointer.x - this.x()) / oldScale,
+        y: (pointer.y - this.y()) / oldScale,
+      };
+
+      let newScale =
+        e.evt.deltaY > 0 ? oldScale + 0.2 : oldScale - 0.2;
+
+      newScale = Math.max(Math.min(5.0, newScale), 0.2);
+
+      this.scale({ x: newScale, y: newScale });
+
+      let newPos = {
+        x: pointer.x - mousePointTo.x * newScale,
+        y: pointer.y - mousePointTo.y * newScale,
+      };
+      this.position(newPos);
+      this.batchDraw();
     })
   }
   spDragCanvas() {
@@ -219,17 +237,18 @@ class SPStage extends Konva.Stage {
         return;
       }
       let pos = this.getPointerPosition();
-      // this.nodeLayer.x(this.nodeLayer.x() +  pos.x - this.spDragStartPos.x);
-      // this.nodeLayer.y(this.nodeLayer.y() +  pos.y - this.spDragStartPos.y);
+      let scale = this.scaleX();
+      // this.nodeLayer.x(this.nodeLayer.x() +  (pos.x - this.spDragStartPos.x) / scale);
+      // this.nodeLayer.y(this.nodeLayer.y() +  (pos.y - this.spDragStartPos.y) / scale);
       for(let i = 0; i < this.nodeLayer.children.length; i++) {
         let node = this.nodeLayer.children[i];
         if(node.name() !== 'sp-node') continue;
-        node.x(node.x() + pos.x - this.spDragStartPos.x);
-        node.y(node.y() + pos.y - this.spDragStartPos.y);
+        node.x(node.x() + (pos.x - this.spDragStartPos.x) / scale);
+        node.y(node.y() + (pos.y - this.spDragStartPos.y) / scale);
         node.spUpdateLines();
       }
       this.spDragStartPos = pos;
-      this.spRedraw();
+      this.nodeLayer.batchDraw();
     });
     this.on("mouseup", evt => {
       this.isDragStart = false;
