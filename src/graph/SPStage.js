@@ -4,19 +4,25 @@ import SPLayer from "./SPLayer";
 import SPStaticLine from "./SPStaticLine";
 import SPDynamicLine from "./SPDynamicLine";
 import SPNode from "./SPNode";
+import SPGridLayer from "./SPGridLayer";
 import * as event from "./event";
 import * as utils from './utils';
 
 class SPStage extends Konva.Stage {
   constructor(config) {
     super(config);
+    // lager for grid
+    this.gridLayer = new SPGridLayer();
+    
     // layer for nodes
     this.nodeLayer = new SPLayer();
 
     // dynamic line
     this.dynamicLine = new SPDynamicLine({name: 'sp-dynamic-line'});
     this.dynamicLine.hide();
-    
+
+    this.add(this.gridLayer);
+    this.gridLayer.spUplateGrid();
     this.add(this.nodeLayer);
     this.nodeLayer.add(this.dynamicLine);
 
@@ -44,6 +50,8 @@ class SPStage extends Konva.Stage {
     this.isDragStart = false;
     this.spDragStartPos = {x:0, y:0};
     this.spDragCanvas();
+
+    this.batchDraw();
   }
   // 重绘
   spRedraw() {
@@ -198,7 +206,7 @@ class SPStage extends Konva.Stage {
   }
   spListenWheel() {
     this.on('wheel', e => {
-      e.evt.preventDefault();
+      e.evt.preventDefault();      
       let oldScale = this.scaleX();
 
       let pointer = this.getPointerPosition();
@@ -211,7 +219,7 @@ class SPStage extends Konva.Stage {
       let newScale =
         e.evt.deltaY > 0 ? oldScale + 0.2 : oldScale - 0.2;
 
-      newScale = Math.max(Math.min(5.0, newScale), 0.2);
+      newScale = Math.max(Math.min(5.0, newScale), 0.4);
 
       this.scale({ x: newScale, y: newScale });
 
@@ -220,6 +228,7 @@ class SPStage extends Konva.Stage {
         y: pointer.y - mousePointTo.y * newScale,
       };
       this.position(newPos);
+      this.gridLayer.spUplateGrid();
       this.batchDraw();
     })
   }
