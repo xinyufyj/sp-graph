@@ -12,7 +12,10 @@ class SPStage extends Konva.Stage {
   constructor(config) {
     super(config);
     // lager for grid
-    this.gridLayer = new SPGridLayer();
+    this.gridLayer = new SPGridLayer({
+      stageWidth: config.width,
+      stageHeight: config.height
+    });
     
     // layer for nodes
     this.nodeLayer = new SPLayer();
@@ -21,10 +24,9 @@ class SPStage extends Konva.Stage {
     this.dynamicLine = new SPDynamicLine({name: 'sp-dynamic-line'});
     this.dynamicLine.hide();
 
-    this.add(this.gridLayer);
-    this.gridLayer.spUplateGrid();
-    this.add(this.nodeLayer);
     this.nodeLayer.add(this.dynamicLine);
+
+    this.add(this.gridLayer, this.nodeLayer);
 
     // 1.点击选中节点或线
     // 当前选中的节点
@@ -194,26 +196,17 @@ class SPStage extends Konva.Stage {
       }
     });
   }
-  spTranslateX(x) {
-    let curScale = this.scaleX();
-    this.nodeLayer.x(x/curScale);
-    this.draw();
-  }
-  spTranslateY(y) {
-    let curScale = this.scaleX();
-    this.nodeLayer.y(y/curScale);
-    this.draw();
-  }
   spListenWheel() {
     this.on('wheel', e => {
       e.evt.preventDefault();      
-      let oldScale = this.scaleX();
+      let oldScale = this.nodeLayer.scaleX();
 
+      // let pointer = utils.getRelativePosition(this.nodeLayer, this.getPointerPosition());
       let pointer = this.getPointerPosition();
 
       let mousePointTo = {
-        x: (pointer.x - this.x()) / oldScale,
-        y: (pointer.y - this.y()) / oldScale,
+        x: (pointer.x - this.nodeLayer.x()) / oldScale,
+        y: (pointer.y - this.nodeLayer.y()) / oldScale,
       };
 
       let newScale =
@@ -221,14 +214,13 @@ class SPStage extends Konva.Stage {
 
       newScale = Math.max(Math.min(5.0, newScale), 0.4);
 
-      this.scale({ x: newScale, y: newScale });
+      this.nodeLayer.scale({ x: newScale, y: newScale });
 
       let newPos = {
         x: pointer.x - mousePointTo.x * newScale,
         y: pointer.y - mousePointTo.y * newScale,
       };
-      this.position(newPos);
-      this.gridLayer.spUplateGrid();
+      this.nodeLayer.position(newPos);
       this.batchDraw();
     })
   }
@@ -246,16 +238,16 @@ class SPStage extends Konva.Stage {
         return;
       }
       let pos = this.getPointerPosition();
-      let scale = this.scaleX();
-      // this.nodeLayer.x(this.nodeLayer.x() +  (pos.x - this.spDragStartPos.x) / scale);
-      // this.nodeLayer.y(this.nodeLayer.y() +  (pos.y - this.spDragStartPos.y) / scale);
-      for(let i = 0; i < this.nodeLayer.children.length; i++) {
-        let node = this.nodeLayer.children[i];
-        if(node.name() !== 'sp-node') continue;
-        node.x(node.x() + (pos.x - this.spDragStartPos.x) / scale);
-        node.y(node.y() + (pos.y - this.spDragStartPos.y) / scale);
-        node.spUpdateLines();
-      }
+      // let scale = this.nodeLayer.scaleX();
+      this.nodeLayer.x(this.nodeLayer.x() +  (pos.x - this.spDragStartPos.x));
+      this.nodeLayer.y(this.nodeLayer.y() +  (pos.y - this.spDragStartPos.y));
+      // for(let i = 0; i < this.nodeLayer.children.length; i++) {
+      //   let node = this.nodeLayer.children[i];
+      //   if(node.name() !== 'sp-node') continue;
+      //   node.x(node.x() + (pos.x - this.spDragStartPos.x) / scale);
+      //   node.y(node.y() + (pos.y - this.spDragStartPos.y) / scale);
+      //   node.spUpdateLines();
+      // }
       this.spDragStartPos = pos;
       this.nodeLayer.batchDraw();
     });

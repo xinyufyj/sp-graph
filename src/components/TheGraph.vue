@@ -21,8 +21,8 @@ export default {
   mounted() {
     this.spStage = new SPStage({
       container: "container",
-      width: 800,
-      height: 600,
+      width: 1200,
+      height: 800,
       name: 'sp-stage'
     });
     window.spStage = this.spStage;
@@ -47,9 +47,9 @@ export default {
 </script>
 
 <style lang="less">
-#container {
-  width: 800px;
-  height: 600px;
-  border: 1px solid lightgray;
-}
+// #container {
+//   width: 800px;
+//   height: 600px;
+//   border: 1px solid lightgray;
+// }
 </style>
