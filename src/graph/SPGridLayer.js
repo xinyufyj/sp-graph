@@ -14,6 +14,7 @@ class SPGridLayer extends SPLayer {
       strokeWidth: 1,
       width: config.stageWidth,
       height: config.stageHeight,
+      listening: false,
       sceneFunc: function(context, shape) {
         context.beginPath();
       
